@@ -30,6 +30,86 @@ const SectionCard = ({ icon: Icon, title, children, iconColor = "text-stripe-ind
   </div>
 );
 
+const formatCurrency = (amount, currency = 'USD') => {
+  if (amount === null || amount === undefined) return null;
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: currency,
+  }).format(amount);
+};
+
+const ContractValueDisplay = ({ value }) => {
+  if (!value || typeof value !== 'object') {
+    return <span className="text-gray-400 italic">Not found</span>;
+  }
+
+  // Handle new schema with pricing_summary
+  if (value.pricing_summary) {
+    return (
+      <div className="space-y-2">
+        <p className="text-sm text-gray-900 font-medium">{value.pricing_summary}</p>
+        <div className="flex flex-wrap gap-2 mt-2">
+          {value.monthly_fee && (
+            <span className="inline-flex items-center px-2.5 py-1 rounded-md bg-emerald-50 text-emerald-700 text-xs font-medium">
+              Monthly: {formatCurrency(value.monthly_fee, value.currency)}
+            </span>
+          )}
+          {value.percentage_rate && (
+            <span className="inline-flex items-center px-2.5 py-1 rounded-md bg-blue-50 text-blue-700 text-xs font-medium">
+              {value.percentage_rate}% of collections
+            </span>
+          )}
+          {value.per_encounter_fee && (
+            <span className="inline-flex items-center px-2.5 py-1 rounded-md bg-purple-50 text-purple-700 text-xs font-medium">
+              Per encounter: {formatCurrency(value.per_encounter_fee, value.currency)}
+            </span>
+          )}
+          {value.total_value && (
+            <span className="inline-flex items-center px-2.5 py-1 rounded-md bg-gray-100 text-gray-700 text-xs font-medium">
+              Total: {formatCurrency(value.total_value, value.currency)}
+            </span>
+          )}
+          {value.is_variable && (
+            <span className="inline-flex items-center px-2.5 py-1 rounded-md bg-amber-50 text-amber-700 text-xs font-medium">
+              Variable pricing
+            </span>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // Handle old schema with amount field (backwards compatibility)
+  if ('amount' in value) {
+    if (value.amount !== null) {
+      const formattedAmount = formatCurrency(value.amount, value.currency);
+      return (
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-gray-900 font-medium">{formattedAmount}</span>
+          {value.is_estimate && (
+            <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-amber-50 text-amber-700 text-xs font-medium">
+              Estimate
+            </span>
+          )}
+        </div>
+      );
+    }
+    // Amount is null - show currency info if available
+    return (
+      <div className="flex items-center gap-2">
+        <span className="text-gray-400 italic">Variable pricing (see additional notes)</span>
+        {value.is_estimate && (
+          <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-amber-50 text-amber-700 text-xs font-medium">
+            Estimate
+          </span>
+        )}
+      </div>
+    );
+  }
+
+  return <span className="text-gray-400 italic">Not found</span>;
+};
+
 const DataField = ({ label, value, isList = false }) => {
   if (value === null || value === undefined) {
     return (
@@ -201,7 +281,12 @@ const ContractDetail = () => {
           {analysis.financial_terms && (
             <SectionCard icon={DollarSign} title="Financial Terms" iconColor="text-emerald-600">
               <dl className="divide-y divide-gray-100">
-                <DataField label="Contract Value" value={analysis.financial_terms.contract_value} />
+                <div className="py-2">
+                  <dt className="text-sm font-medium text-gray-500">Contract Value</dt>
+                  <dd className="mt-1">
+                    <ContractValueDisplay value={analysis.financial_terms.contract_value} />
+                  </dd>
+                </div>
                 <DataField label="Payment Terms" value={analysis.financial_terms.payment_terms} />
                 <DataField label="Payment Schedule" value={analysis.financial_terms.payment_schedule} />
                 <DataField label="Pricing Model" value={analysis.financial_terms.pricing_model} />

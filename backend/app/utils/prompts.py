@@ -40,13 +40,17 @@ EXTRACTION SCHEMA:
   }},
   "financial_terms": {{
     "contract_value": {{
-      "amount": "number or null",
+      "total_value": "number or null - total contract value if a fixed amount exists",
+      "monthly_fee": "number or null - monthly minimum or flat fee if applicable",
+      "percentage_rate": "number or null - percentage of collections/revenue if applicable",
+      "per_encounter_fee": "number or null - per-encounter or per-claim fee if applicable",
       "currency": "string (USD, EUR, etc.)",
-      "is_estimate": "boolean"
+      "is_variable": "boolean - true if pricing depends on volume/performance",
+      "pricing_summary": "string - human-readable summary of the complete pricing structure"
     }},
     "payment_terms": "string or null",
     "payment_schedule": "string or null",
-    "pricing_model": "string (percentage, flat fee, tiered, etc.)",
+    "pricing_model": "string (percentage, flat fee, per-encounter, tiered, hybrid, etc.)",
     "percentage_of_collections": "number or null",
     "late_payment_penalties": "string or null"
   }},
@@ -93,6 +97,7 @@ IMPORTANT:
 - Extract numbers without currency symbols or formatting
 - Be precise and quote directly from the document when possible
 - If a field cannot be found, return null
+- For contract_value: RCM contracts often have complex pricing (monthly fees, percentage of collections, per-encounter fees). Extract ALL applicable pricing components. The "pricing_summary" should be a clear, human-readable description like "Monthly minimum of $1,295 per provider plus 4.5% of collections"
 - In "additional_notes", capture any critical terms not fitting the schema
 - Return ONLY valid JSON, no additional text or explanation"""
 
