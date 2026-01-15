@@ -90,16 +90,16 @@ const ContractList = ({ refreshTrigger }) => {
           <Skeleton className="h-8 w-56" />
           <Skeleton className="h-4 w-32" />
         </div>
-        <Card className="border-slate-200 shadow-md overflow-hidden bg-white">
+        <Card className="border-gray-200 shadow-stripe overflow-hidden bg-white rounded-xl">
           <div className="p-6 space-y-4">
             {[...Array(5)].map((_, i) => (
               <div key={i} className="flex items-center space-x-4 py-2">
-                <Skeleton className="h-14 w-14 rounded-lg" />
+                <Skeleton className="h-12 w-12 rounded-xl" />
                 <div className="space-y-2 flex-1">
                   <Skeleton className="h-5 w-[280px]" />
                   <Skeleton className="h-3 w-[200px]" />
                 </div>
-                <Skeleton className="h-8 w-28 rounded-full" />
+                <Skeleton className="h-7 w-24 rounded-full" />
                 <Skeleton className="h-4 w-24" />
                 <Skeleton className="h-9 w-20" />
               </div>
@@ -118,24 +118,24 @@ const ContractList = ({ refreshTrigger }) => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold text-slate-800">
+          <h2 className="text-2xl font-semibold text-gray-900">
             Your Contracts
           </h2>
-          <p className="text-sm text-slate-500 mt-1">
+          <p className="text-sm text-gray-500 mt-1">
             {contracts.length} {contracts.length === 1 ? 'contract' : 'contracts'} uploaded
           </p>
         </div>
       </div>
 
-      <Card className="border-slate-200 shadow-md overflow-hidden bg-white">
+      <Card className="border-gray-200 shadow-stripe overflow-hidden bg-white rounded-xl">
         <Table>
           <TableHeader>
-            <TableRow className="bg-slate-50 border-b border-slate-200">
-              <TableHead className="font-semibold text-slate-700">File Name</TableHead>
-              <TableHead className="font-semibold text-slate-700">Status</TableHead>
-              <TableHead className="font-semibold text-slate-700">Size</TableHead>
-              <TableHead className="font-semibold text-slate-700">Uploaded</TableHead>
-              <TableHead className="text-right font-semibold text-slate-700">Actions</TableHead>
+            <TableRow className="bg-gray-50/80 border-b border-gray-200">
+              <TableHead className="font-medium text-gray-600">File Name</TableHead>
+              <TableHead className="font-medium text-gray-600">Status</TableHead>
+              <TableHead className="font-medium text-gray-600">Size</TableHead>
+              <TableHead className="font-medium text-gray-600">Uploaded</TableHead>
+              <TableHead className="text-right font-medium text-gray-600">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -143,18 +143,18 @@ const ContractList = ({ refreshTrigger }) => {
               <TableRow
                 key={contract.id}
                 onClick={() => navigate(`/contract/${contract.id}`)}
-                className="cursor-pointer hover:bg-blue-50/50 transition-colors border-b border-slate-100"
+                className="cursor-pointer hover:bg-stripe-indigo/[0.03] transition-colors duration-150 border-b border-gray-100"
               >
                 <TableCell className="py-4">
                   <div className="flex items-center gap-3">
-                    <div className="p-2 bg-blue-50 rounded-lg">
-                      <FileText className="w-5 h-5 text-blue-600" />
+                    <div className="p-2.5 bg-stripe-indigo/10 rounded-xl">
+                      <FileText className="w-5 h-5 text-stripe-indigo" />
                     </div>
                     <div>
-                      <div className="font-medium text-slate-800">
+                      <div className="font-medium text-gray-900">
                         {contract.original_filename}
                       </div>
-                      <div className="text-xs text-slate-500 mt-0.5">
+                      <div className="text-xs text-gray-500 mt-0.5">
                         {contract.file_type.toUpperCase()} Document
                       </div>
                     </div>
@@ -163,10 +163,10 @@ const ContractList = ({ refreshTrigger }) => {
                 <TableCell>
                   <StatusBadge status={contract.status} />
                 </TableCell>
-                <TableCell className="text-slate-600 font-medium">
+                <TableCell className="text-gray-600 font-medium">
                   {formatFileSize(contract.file_size)}
                 </TableCell>
-                <TableCell className="text-slate-600">
+                <TableCell className="text-gray-500">
                   {formatDate(contract.upload_date)}
                 </TableCell>
                 <TableCell className="text-right">
@@ -180,7 +180,7 @@ const ContractList = ({ refreshTrigger }) => {
                           navigate(`/contract/${contract.id}`);
                         }}
                         title="View Analysis"
-                        className="hover:bg-blue-100 hover:text-blue-700"
+                        className="hover:bg-stripe-indigo/10 hover:text-stripe-indigo rounded-lg"
                       >
                         <Eye className="w-4 h-4" />
                       </Button>
@@ -191,7 +191,7 @@ const ContractList = ({ refreshTrigger }) => {
                       onClick={(e) => handleDelete(contract.id, e)}
                       disabled={deleting === contract.id}
                       title="Delete"
-                      className="hover:bg-red-100 hover:text-red-700"
+                      className="hover:bg-red-50 hover:text-red-600 rounded-lg"
                     >
                       {deleting === contract.id ? (
                         <Loader className="w-4 h-4 animate-spin" />

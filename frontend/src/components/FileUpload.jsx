@@ -65,34 +65,34 @@ const FileUpload = ({ onUploadSuccess }) => {
   });
 
   return (
-    <div className="w-full max-w-3xl mx-auto">
+    <div className="w-full max-w-2xl mx-auto">
       <Card
         {...getRootProps()}
         className={cn(
-          "border-2 border-dashed border-slate-300 p-12 text-center cursor-pointer transition-all duration-300",
-          "bg-white shadow-sm hover:shadow-md",
-          "hover:border-blue-400 hover:bg-blue-50/30",
-          isDragActive && "border-blue-500 bg-blue-50/50 shadow-lg scale-[1.02]",
-          uploading && "opacity-60 cursor-not-allowed"
+          "border-2 border-dashed border-gray-200 p-12 text-center cursor-pointer transition-all duration-200",
+          "bg-white shadow-stripe hover:shadow-stripe-lg rounded-2xl",
+          "hover:border-stripe-indigo/50 hover:bg-stripe-indigo/[0.02]",
+          isDragActive && "border-stripe-indigo bg-stripe-indigo/5 shadow-stripe-xl scale-[1.01]",
+          uploading && "opacity-70 cursor-not-allowed"
         )}
       >
         <input {...getInputProps()} />
 
-        <div className="flex flex-col items-center gap-5">
+        <div className="flex flex-col items-center gap-6">
           {uploading ? (
             <>
               <div className="relative">
-                <div className="absolute inset-0 bg-blue-500/20 rounded-full blur-xl"></div>
-                <Loader className="w-16 h-16 text-blue-600 animate-spin relative" />
+                <div className="absolute inset-0 bg-stripe-indigo/20 rounded-full blur-xl"></div>
+                <Loader className="w-14 h-14 text-stripe-indigo animate-spin relative" />
               </div>
               <div className="w-full max-w-xs space-y-3">
-                <div className="bg-slate-100 rounded-full h-3 overflow-hidden shadow-inner">
+                <div className="bg-gray-100 rounded-full h-2 overflow-hidden">
                   <div
-                    className="bg-gradient-to-r from-blue-500 to-indigo-600 h-full transition-all duration-300 rounded-full shadow-sm"
+                    className="bg-gradient-to-r from-stripe-indigo to-stripe-purple h-full transition-all duration-300 rounded-full"
                     style={{ width: `${uploadProgress}%` }}
                   />
                 </div>
-                <p className="text-sm font-medium text-slate-700">Uploading... {uploadProgress}%</p>
+                <p className="text-sm font-medium text-gray-600">Uploading... {uploadProgress}%</p>
               </div>
             </>
           ) : (
@@ -100,27 +100,30 @@ const FileUpload = ({ onUploadSuccess }) => {
               <div className="relative">
                 {isDragActive ? (
                   <>
-                    <div className="absolute inset-0 bg-blue-500/20 rounded-full blur-xl animate-pulse"></div>
-                    <FileText className="w-20 h-20 text-blue-600 relative animate-bounce" />
+                    <div className="absolute inset-0 bg-stripe-indigo/20 rounded-2xl blur-xl animate-pulse"></div>
+                    <div className="relative bg-stripe-indigo/10 p-5 rounded-2xl">
+                      <FileText className="w-12 h-12 text-stripe-indigo" />
+                    </div>
                   </>
                 ) : (
                   <>
-                    <div className="absolute inset-0 bg-slate-200/50 rounded-full blur-lg"></div>
-                    <Upload className="w-20 h-20 text-slate-400 relative" />
+                    <div className="bg-gray-100 p-5 rounded-2xl transition-colors group-hover:bg-stripe-indigo/10">
+                      <Upload className="w-12 h-12 text-gray-400" />
+                    </div>
                   </>
                 )}
               </div>
               <div className="space-y-2">
-                <p className="text-xl font-bold text-slate-800">
+                <p className="text-xl font-semibold text-gray-900">
                   {isDragActive ? 'Drop your file here' : 'Upload Your Contract'}
                 </p>
-                <p className="text-sm text-slate-600">
-                  Drag & drop or <span className="text-blue-600 font-semibold">click to browse</span>
+                <p className="text-sm text-gray-500">
+                  Drag & drop or <span className="text-stripe-indigo font-medium">click to browse</span>
                 </p>
-                <div className="flex items-center justify-center gap-2 mt-3 text-xs text-slate-500">
-                  <span className="px-2 py-1 bg-slate-100 rounded">PDF</span>
-                  <span className="px-2 py-1 bg-slate-100 rounded">DOCX</span>
-                  <span className="text-slate-400">•</span>
+                <div className="flex items-center justify-center gap-3 mt-4 text-xs text-gray-400">
+                  <span className="px-2.5 py-1 bg-gray-100 rounded-md font-medium">PDF</span>
+                  <span className="px-2.5 py-1 bg-gray-100 rounded-md font-medium">DOCX</span>
+                  <span className="text-gray-300">•</span>
                   <span>Max 50MB</span>
                 </div>
               </div>

@@ -8,25 +8,25 @@ const StatusBadge = ({ status }) => {
       variant: 'secondary',
       icon: Clock,
       label: 'Uploaded',
-      className: 'bg-slate-100 text-slate-700 hover:bg-slate-100 border border-slate-200'
+      className: 'bg-gray-100 text-gray-600 hover:bg-gray-100 border-0'
     },
     processing: {
       variant: 'default',
       icon: Loader,
       label: 'Processing',
-      className: 'bg-blue-50 text-blue-700 hover:bg-blue-50 border border-blue-200'
+      className: 'bg-stripe-indigo/10 text-stripe-indigo hover:bg-stripe-indigo/10 border-0'
     },
     completed: {
       variant: 'default',
       icon: CheckCircle,
       label: 'Completed',
-      className: 'bg-emerald-50 text-emerald-700 hover:bg-emerald-50 border border-emerald-200'
+      className: 'bg-emerald-100 text-emerald-700 hover:bg-emerald-100 border-0'
     },
     failed: {
       variant: 'destructive',
       icon: AlertCircle,
       label: 'Failed',
-      className: 'bg-red-50 text-red-700 hover:bg-red-50 border border-red-200'
+      className: 'bg-red-100 text-red-700 hover:bg-red-100 border-0'
     }
   };
 
@@ -34,7 +34,7 @@ const StatusBadge = ({ status }) => {
   const Icon = config.icon;
 
   return (
-    <Badge variant={config.variant} className={cn('gap-1.5 px-2.5 py-1 font-medium', config.className)}>
+    <Badge variant={config.variant} className={cn('gap-1.5 px-2.5 py-1 font-medium rounded-full', config.className)}>
       <Icon className={cn('w-3.5 h-3.5', status === 'processing' && 'animate-spin')} />
       {config.label}
     </Badge>
