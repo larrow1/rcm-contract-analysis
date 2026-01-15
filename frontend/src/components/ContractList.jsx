@@ -1,48 +1,44 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  FileText,
-  CheckCircle,
-  Clock,
-  AlertCircle,
-  Trash2,
-  Eye,
-  Loader
-} from 'lucide-react';
+import { FileText, Trash2, Eye, Loader } from 'lucide-react';
 import { contractsAPI } from '../services/api';
-
-const StatusBadge = ({ status }) => {
-  const statusConfig = {
-    uploaded: { color: 'bg-gray-100 text-gray-700', icon: Clock, label: 'Uploaded' },
-    processing: { color: 'bg-blue-100 text-blue-700', icon: Loader, label: 'Processing' },
-    completed: { color: 'bg-green-100 text-green-700', icon: CheckCircle, label: 'Completed' },
-    failed: { color: 'bg-red-100 text-red-700', icon: AlertCircle, label: 'Failed' }
-  };
-
-  const config = statusConfig[status] || statusConfig.uploaded;
-  const Icon = config.icon;
-
-  return (
-    <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${config.color}`}>
-      <Icon className={`w-3 h-3 ${status === 'processing' ? 'animate-spin' : ''}`} />
-      {config.label}
-    </span>
-  );
-};
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useToast } from '@/hooks/use-toast';
+import StatusBadge from './StatusBadge';
+import EmptyState from './EmptyState';
+import { formatDate, formatFileSize } from '@/lib/formatting';
 
 const ContractList = ({ refreshTrigger }) => {
   const [contracts, setContracts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(null);
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   const fetchContracts = async () => {
     try {
-      setLoading(true);
+      const isInitialLoad = loading && contracts.length === 0;
+      if (isInitialLoad) setLoading(true);
+
       const response = await contractsAPI.getContracts({ page: 1, page_size: 50 });
       setContracts(response.data.contracts);
     } catch (error) {
       console.error('Failed to fetch contracts:', error);
+      toast({
+        variant: "destructive",
+        title: "Failed to load contracts",
+        description: "Please try refreshing the page.",
+      });
     } finally {
       setLoading(false);
     }
@@ -56,156 +52,160 @@ const ContractList = ({ refreshTrigger }) => {
   useEffect(() => {
     const hasProcessing = contracts.some(c => c.status === 'processing');
     if (hasProcessing) {
-      const interval = setInterval(fetchContracts, 5000); // Refresh every 5 seconds
+      const interval = setInterval(fetchContracts, 5000);
       return () => clearInterval(interval);
     }
   }, [contracts]);
 
   const handleDelete = async (contractId, e) => {
     e.stopPropagation();
+
     if (!confirm('Are you sure you want to delete this contract?')) return;
 
     try {
       setDeleting(contractId);
       await contractsAPI.deleteContract(contractId);
       setContracts(contracts.filter(c => c.id !== contractId));
+
+      toast({
+        title: "Contract deleted",
+        description: "The contract has been successfully deleted.",
+      });
     } catch (error) {
       console.error('Failed to delete contract:', error);
-      alert('Failed to delete contract');
+      toast({
+        variant: "destructive",
+        title: "Failed to delete contract",
+        description: "Please try again.",
+      });
     } finally {
       setDeleting(null);
     }
   };
 
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
-  const formatFileSize = (bytes) => {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
-  };
-
   if (loading) {
     return (
-      <div className="flex justify-center items-center py-12">
-        <Loader className="w-8 h-8 text-blue-500 animate-spin" />
+      <div className="space-y-6">
+        <div className="space-y-2">
+          <Skeleton className="h-8 w-56" />
+          <Skeleton className="h-4 w-32" />
+        </div>
+        <Card className="border-slate-200 shadow-md overflow-hidden bg-white">
+          <div className="p-6 space-y-4">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="flex items-center space-x-4 py-2">
+                <Skeleton className="h-14 w-14 rounded-lg" />
+                <div className="space-y-2 flex-1">
+                  <Skeleton className="h-5 w-[280px]" />
+                  <Skeleton className="h-3 w-[200px]" />
+                </div>
+                <Skeleton className="h-8 w-28 rounded-full" />
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-9 w-20" />
+              </div>
+            ))}
+          </div>
+        </Card>
       </div>
     );
   }
 
   if (contracts.length === 0) {
-    return (
-      <div className="text-center py-12">
-        <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-        <p className="text-gray-500 text-lg">No contracts uploaded yet</p>
-        <p className="text-gray-400 text-sm mt-2">Upload your first RCM contract to get started</p>
-      </div>
-    );
+    return <EmptyState />;
   }
 
   return (
-    <div className="space-y-3">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-semibold text-gray-900">
-          Contracts ({contracts.length})
-        </h2>
-      </div>
-
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  File Name
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Size
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Uploaded
-                </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {contracts.map((contract) => (
-                <tr
-                  key={contract.id}
-                  onClick={() => navigate(`/contract/${contract.id}`)}
-                  className="hover:bg-gray-50 cursor-pointer transition-colors"
-                >
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <FileText className="w-5 h-5 text-gray-400 mr-3" />
-                      <div>
-                        <div className="text-sm font-medium text-gray-900">
-                          {contract.original_filename}
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          {contract.file_type.toUpperCase()}
-                        </div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <StatusBadge status={contract.status} />
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {formatFileSize(contract.file_size)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {formatDate(contract.upload_date)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <div className="flex justify-end gap-2">
-                      {contract.status === 'completed' && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            navigate(`/contract/${contract.id}`);
-                          }}
-                          className="text-blue-600 hover:text-blue-900 p-2 rounded hover:bg-blue-50"
-                          title="View Analysis"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </button>
-                      )}
-                      <button
-                        onClick={(e) => handleDelete(contract.id, e)}
-                        disabled={deleting === contract.id}
-                        className="text-red-600 hover:text-red-900 p-2 rounded hover:bg-red-50 disabled:opacity-50"
-                        title="Delete"
-                      >
-                        {deleting === contract.id ? (
-                          <Loader className="w-4 h-4 animate-spin" />
-                        ) : (
-                          <Trash2 className="w-4 h-4" />
-                        )}
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <div>
+          <h2 className="text-2xl font-bold text-slate-800">
+            Your Contracts
+          </h2>
+          <p className="text-sm text-slate-500 mt-1">
+            {contracts.length} {contracts.length === 1 ? 'contract' : 'contracts'} uploaded
+          </p>
         </div>
       </div>
+
+      <Card className="border-slate-200 shadow-md overflow-hidden bg-white">
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-slate-50 border-b border-slate-200">
+              <TableHead className="font-semibold text-slate-700">File Name</TableHead>
+              <TableHead className="font-semibold text-slate-700">Status</TableHead>
+              <TableHead className="font-semibold text-slate-700">Size</TableHead>
+              <TableHead className="font-semibold text-slate-700">Uploaded</TableHead>
+              <TableHead className="text-right font-semibold text-slate-700">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {contracts.map((contract) => (
+              <TableRow
+                key={contract.id}
+                onClick={() => navigate(`/contract/${contract.id}`)}
+                className="cursor-pointer hover:bg-blue-50/50 transition-colors border-b border-slate-100"
+              >
+                <TableCell className="py-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-blue-50 rounded-lg">
+                      <FileText className="w-5 h-5 text-blue-600" />
+                    </div>
+                    <div>
+                      <div className="font-medium text-slate-800">
+                        {contract.original_filename}
+                      </div>
+                      <div className="text-xs text-slate-500 mt-0.5">
+                        {contract.file_type.toUpperCase()} Document
+                      </div>
+                    </div>
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <StatusBadge status={contract.status} />
+                </TableCell>
+                <TableCell className="text-slate-600 font-medium">
+                  {formatFileSize(contract.file_size)}
+                </TableCell>
+                <TableCell className="text-slate-600">
+                  {formatDate(contract.upload_date)}
+                </TableCell>
+                <TableCell className="text-right">
+                  <div className="flex justify-end gap-1">
+                    {contract.status === 'completed' && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/contract/${contract.id}`);
+                        }}
+                        title="View Analysis"
+                        className="hover:bg-blue-100 hover:text-blue-700"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </Button>
+                    )}
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={(e) => handleDelete(contract.id, e)}
+                      disabled={deleting === contract.id}
+                      title="Delete"
+                      className="hover:bg-red-100 hover:text-red-700"
+                    >
+                      {deleting === contract.id ? (
+                        <Loader className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Trash2 className="w-4 h-4" />
+                      )}
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </Card>
     </div>
   );
 };

@@ -1,49 +1,58 @@
 import { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { Upload, FileText, CheckCircle, AlertCircle, Loader } from 'lucide-react';
+import { Upload, FileText, Loader } from 'lucide-react';
 import { contractsAPI } from '../services/api';
+import { Card } from '@/components/ui/card';
+import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 
 const FileUpload = ({ onUploadSuccess }) => {
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
-  const [uploadStatus, setUploadStatus] = useState(null); // 'success', 'error'
-  const [errorMessage, setErrorMessage] = useState('');
+  const { toast } = useToast();
 
   const onDrop = useCallback(async (acceptedFiles) => {
     if (acceptedFiles.length === 0) return;
 
     const file = acceptedFiles[0];
     setUploading(true);
-    setUploadStatus(null);
     setUploadProgress(0);
-    setErrorMessage('');
 
     try {
       const response = await contractsAPI.uploadContract(file, (progress) => {
         setUploadProgress(progress);
       });
 
-      setUploadStatus('success');
       setUploading(false);
+      setUploadProgress(0);
+
+      // Show success toast
+      toast({
+        title: "Upload Successful!",
+        description: `${file.name} has been uploaded and is being analyzed.`,
+        duration: 5000,
+      });
 
       // Call success callback if provided
       if (onUploadSuccess) {
         onUploadSuccess(response.data);
       }
 
-      // Reset after 3 seconds
-      setTimeout(() => {
-        setUploadStatus(null);
-        setUploadProgress(0);
-      }, 3000);
-
     } catch (error) {
-      setUploadStatus('error');
       setUploading(false);
-      setErrorMessage(error.response?.data?.detail || 'Upload failed. Please try again.');
+      setUploadProgress(0);
+
+      // Show error toast
+      toast({
+        variant: "destructive",
+        title: "Upload Failed",
+        description: error.response?.data?.detail || 'Upload failed. Please try again.',
+        duration: 7000,
+      });
+
       console.error('Upload error:', error);
     }
-  }, [onUploadSuccess]);
+  }, [onUploadSuccess, toast]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -56,72 +65,69 @@ const FileUpload = ({ onUploadSuccess }) => {
   });
 
   return (
-    <div className="w-full max-w-2xl mx-auto">
-      <div
+    <div className="w-full max-w-3xl mx-auto">
+      <Card
         {...getRootProps()}
-        className={`
-          border-2 border-dashed rounded-lg p-12 text-center cursor-pointer
-          transition-all duration-200
-          ${isDragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-gray-400'}
-          ${uploading ? 'opacity-50 cursor-not-allowed' : ''}
-          ${uploadStatus === 'success' ? 'border-green-500 bg-green-50' : ''}
-          ${uploadStatus === 'error' ? 'border-red-500 bg-red-50' : ''}
-        `}
+        className={cn(
+          "border-2 border-dashed border-slate-300 p-12 text-center cursor-pointer transition-all duration-300",
+          "bg-white shadow-sm hover:shadow-md",
+          "hover:border-blue-400 hover:bg-blue-50/30",
+          isDragActive && "border-blue-500 bg-blue-50/50 shadow-lg scale-[1.02]",
+          uploading && "opacity-60 cursor-not-allowed"
+        )}
       >
         <input {...getInputProps()} />
 
-        <div className="flex flex-col items-center gap-4">
+        <div className="flex flex-col items-center gap-5">
           {uploading ? (
             <>
-              <Loader className="w-16 h-16 text-blue-500 animate-spin" />
-              <div className="w-full max-w-xs">
-                <div className="bg-gray-200 rounded-full h-2 overflow-hidden">
+              <div className="relative">
+                <div className="absolute inset-0 bg-blue-500/20 rounded-full blur-xl"></div>
+                <Loader className="w-16 h-16 text-blue-600 animate-spin relative" />
+              </div>
+              <div className="w-full max-w-xs space-y-3">
+                <div className="bg-slate-100 rounded-full h-3 overflow-hidden shadow-inner">
                   <div
-                    className="bg-blue-500 h-full transition-all duration-300"
+                    className="bg-gradient-to-r from-blue-500 to-indigo-600 h-full transition-all duration-300 rounded-full shadow-sm"
                     style={{ width: `${uploadProgress}%` }}
                   />
                 </div>
-                <p className="text-sm text-gray-600 mt-2">Uploading... {uploadProgress}%</p>
-              </div>
-            </>
-          ) : uploadStatus === 'success' ? (
-            <>
-              <CheckCircle className="w-16 h-16 text-green-500" />
-              <div>
-                <p className="text-lg font-semibold text-green-700">Upload Successful!</p>
-                <p className="text-sm text-gray-600 mt-1">Your contract is being analyzed...</p>
-              </div>
-            </>
-          ) : uploadStatus === 'error' ? (
-            <>
-              <AlertCircle className="w-16 h-16 text-red-500" />
-              <div>
-                <p className="text-lg font-semibold text-red-700">Upload Failed</p>
-                <p className="text-sm text-red-600 mt-1">{errorMessage}</p>
+                <p className="text-sm font-medium text-slate-700">Uploading... {uploadProgress}%</p>
               </div>
             </>
           ) : (
             <>
-              {isDragActive ? (
-                <FileText className="w-16 h-16 text-blue-500" />
-              ) : (
-                <Upload className="w-16 h-16 text-gray-400" />
-              )}
-              <div>
-                <p className="text-lg font-semibold text-gray-700">
-                  {isDragActive ? 'Drop your file here' : 'Upload RCM Contract'}
+              <div className="relative">
+                {isDragActive ? (
+                  <>
+                    <div className="absolute inset-0 bg-blue-500/20 rounded-full blur-xl animate-pulse"></div>
+                    <FileText className="w-20 h-20 text-blue-600 relative animate-bounce" />
+                  </>
+                ) : (
+                  <>
+                    <div className="absolute inset-0 bg-slate-200/50 rounded-full blur-lg"></div>
+                    <Upload className="w-20 h-20 text-slate-400 relative" />
+                  </>
+                )}
+              </div>
+              <div className="space-y-2">
+                <p className="text-xl font-bold text-slate-800">
+                  {isDragActive ? 'Drop your file here' : 'Upload Your Contract'}
                 </p>
-                <p className="text-sm text-gray-500 mt-2">
-                  Drag & drop or click to select
+                <p className="text-sm text-slate-600">
+                  Drag & drop or <span className="text-blue-600 font-semibold">click to browse</span>
                 </p>
-                <p className="text-xs text-gray-400 mt-1">
-                  Supports PDF and DOCX files (max 50MB)
-                </p>
+                <div className="flex items-center justify-center gap-2 mt-3 text-xs text-slate-500">
+                  <span className="px-2 py-1 bg-slate-100 rounded">PDF</span>
+                  <span className="px-2 py-1 bg-slate-100 rounded">DOCX</span>
+                  <span className="text-slate-400">•</span>
+                  <span>Max 50MB</span>
+                </div>
               </div>
             </>
           )}
         </div>
-      </div>
+      </Card>
     </div>
   );
 };
